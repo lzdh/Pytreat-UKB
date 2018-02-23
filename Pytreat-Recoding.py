@@ -32,22 +32,24 @@ v = pd.DataFrame(varsVARS.apply(lambda x: int(x[0][0].split('-')[0])))
 v.columns = ['VarName']
 merged = pd.merge(v, NameCode, on='VarName',how='left')
 
-# Recode old coding like -3, -1 to NA (this bit is slow; need to be improved)
+
+Vars.columns = merged['DataCoding']
+# Recode old coding like -3, -1 to NA
 CodingMD_sub = CodingMD[CodingMD.NAvalues.notnull()]
-NA = CodingMD_sub.NAvalues.str.split(',')
+CodingMD_sub=CodingMD_sub.astype(str)
+mapping = {}
+for row in CodingMD_sub.T:
+    coding   = CodingMD_sub['data_coding'][row]
+    NAval = CodingMD_sub['NAvalues'][row]
+    
+    mapping[coding] = {float(val) : 'NaN'
+                      for val in NAval.split(',')}
 
-for i in range(CodingMD.shape[0]):
+Vars = Vars.replace(mappings)
 
-    mask=merged.DataCoding==str(CodingMD_sub.data_coding.iloc[i])
-    var_subset=Vars.T[mask].T
-
-    mask1=var_subset.isin(list(map(int, NA[1])))
-    var_subset[mask1]='NaN'
-    Vars.update(var_subset)
 
 # Recode bizarre coding like -7, -11, 555 to normal coding
 # Please make sure its a 1-to-1 recoding
-Vars.columns = merged['DataCoding']
 CodingMD_sub = CodingMD[['RawLevels','NewLevels', 'data_coding']].dropna()
 CodingMD_sub = CodingMD_sub.astype(str)
 
@@ -61,7 +63,6 @@ for row in CodingMD_sub.T:
                         for rlev, nlev
                         in zip(rawLevel.split(','), newLevel.split(','))}
 
-mappings['100318'] = {3.0 : 333.0, 7.0 : 777.0}
 mappings
 
-Vars.replace(mappings)
+Vars = Vars.replace(mappings)

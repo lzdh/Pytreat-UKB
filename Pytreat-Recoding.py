@@ -2,7 +2,6 @@ import scipy.io as sio
 import numpy as np
 import pandas as pd
 import csv
-import re
 import sys
 
 ukb8252=pd.read_csv('UKBrodeo/parsed_ukb8252.tsv','\t')
